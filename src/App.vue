@@ -1,5 +1,6 @@
 <template>
   <router-view/>
+  方法
 </template>
 <style src="./assets/css/reset.css"></style>
 <style lang="stylus">
