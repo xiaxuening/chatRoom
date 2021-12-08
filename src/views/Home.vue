@@ -81,7 +81,6 @@ export default {
     //   loadTime: 5000,//加载超时时长
     //   playTime: 5000//播放超时时长
     // })
-    console.log(kgplay)
     return {
       bgColor,
       color,
