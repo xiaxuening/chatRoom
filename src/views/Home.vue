@@ -22,7 +22,7 @@
         </div>
         <div class="tool">
           <el-button-group>
-            <el-button type="text"><i class=" iconfont icon-yinlemusic215"></i>点歌</el-button>
+            <el-button type="text" @click="choosHandel"><i class=" iconfont icon-yinlemusic215"></i>点歌</el-button>
             <el-button type="text"><i class=" iconfont icon-right-1"></i>已点</el-button>
             <el-button type="text"><i class=" iconfont icon-shoucang1"></i>歌单</el-button>
             <el-button type="text"><i class=" iconfont icon-wenhao"></i>反馈</el-button>
@@ -30,8 +30,30 @@
         </div>
       </section>
     </div>
-    <div class="col chat-box"></div>
+    <div class="col chat-box">
+      <section class="chat-content"></section>
+      <section class="chat-input">
+        <div class="chat-input-tool">
+          <el-button type="text"><i class="iconfont icon-Happy-Wink"></i>表情</el-button>
+          <el-button type="text"><i class="iconfont icon-5jietu-1"></i>截图</el-button>
+        </div>
+        <div class="chat-input-value">
+          <el-input
+            v-model="textarea"
+            type="textarea"
+            placeholder="Please input"
+          />
+        </div>
+      </section>
+    </div>
   </el-main>
+  <el-drawer
+    v-model="drawer"
+    title="I like listening to music."
+    :direction="direction"
+  >
+    <span>Hi, there!</span>
+  </el-drawer>
 </template>
 
 <script>
@@ -41,23 +63,32 @@ export default {
   setup(props) {
     const bgColor = ref('#000')
     const color = ref('#fff')
+    const drawer = ref(false)
+    const direction = 'ltr'
+    const textarea = ref('')
     const lyricObj = reactive({
       lyricName: '带我去很有的地方(Live)',
       user: '黄晓明',
       play: true
     })
-    function aa(strings, ...values) {
-      console.log(strings);
-      console.log(values);
+    const choosHandel = _ => {
+      drawer.value = true
     }
-    let a = 1
-    let b = 2
-    let c = `小明今年`
-    const d = aa`${c}${a + b}岁了，该上学了`
-    console.log(d);
+    const kgplay = window.kgPlayerV2
+    // kgplay.player.initPlayer({
+    //   appid,//open.kugou.com颁发的appid
+    //   ticket,//有效凭证，见最底部"服务端获取ticket"
+    //   loadTime: 5000,//加载超时时长
+    //   playTime: 5000//播放超时时长
+    // })
+    console.log(kgplay)
     return {
       bgColor,
       color,
+      drawer,
+      direction,
+      choosHandel,
+      textarea,
       ...toRefs(lyricObj)
     }
   }
@@ -138,9 +169,51 @@ export default {
             padding 0 5px
 
 
-    .chat-box {
+    .chat-box
       flex 1
-      // width 60%
-    }
+      display flex
+      flex-direction column
+
+      .chat-input
+        height 150px
+        border-top 1px solid #333
+        display flex
+        flex-direction column
+
+        .chat-input-tool
+          height 30px
+          padding-left 10px
+
+          .el-button
+            color #fff
+
+            &:hover
+              color #409eff
+
+            .iconfont
+              margin-right 4px
+
+        .chat-input-value
+          flex 1
+          // padding 0px 10px
+
+          .el-textarea
+            height 100%
+
+
+      .chat-content
+        flex 1
+</style>
+<style lang="stylus">
+.chat-input
+  .chat-input-value
+    .el-textarea__inner
+      height 100%
+      border none
+      border-radius inherit
+      background transparent
+      color #fff
+      resize none
+      outline none
 
 </style>
