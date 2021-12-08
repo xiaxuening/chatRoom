@@ -31,7 +31,11 @@
       </section>
     </div>
     <div class="col chat-box">
-      <section class="chat-content"></section>
+      <section class="chat-content">
+        <header class="">
+
+        </header>
+      </section>
       <section class="chat-input">
         <div class="chat-input-tool">
           <el-button type="text"><i class="iconfont icon-Happy-Wink"></i>表情</el-button>
@@ -42,6 +46,7 @@
             v-model="textarea"
             type="textarea"
             placeholder="Please input"
+            @keyup.enter.native="inputHandle($event)"
           />
         </div>
       </section>
@@ -58,6 +63,7 @@
 
 <script>
 import { ref, reactive, toRefs } from 'vue'
+import Axios from 'axios';
 export default {
   name: 'Home',
   setup(props) {
@@ -66,13 +72,57 @@ export default {
     const drawer = ref(false)
     const direction = 'ltr'
     const textarea = ref('')
+    const info = ref('')
     const lyricObj = reactive({
       lyricName: '带我去很有的地方(Live)',
       user: '黄晓明',
       play: true
     })
+    const handleOpen = () => {
+      console.log('WebSocket open');
+    }
+    const handleClose = () => {
+      console.log('WebSocket close');
+    }
+    const handleError = () => {
+      console.log('WebSocket error');
+    }
+    const handleMessage = (res) => {
+      console.log('WebSocket message', JSON.parse(res.data))
+    }
+    const userId = new Date().getTime()
+    const ws = new WebSocket(`ws:192.168.3.56:8095/mws?userId=${userId}&roomId=888&token=`)
+    ws.addEventListener('open', handleOpen, false)
+    ws.addEventListener('close', handleClose, false)
+    ws.addEventListener('error', handleError, false)
+    ws.addEventListener('message', handleMessage, false)
     const choosHandel = _ => {
       drawer.value = true
+    }
+    const inputHandle = (e) => {
+      if (e.key == "Enter" || e.code == "Enter" || e.keyCode == 13) {
+        e.returnValue = false;
+        info.value = textarea.value
+        textarea.value = ''
+        // ws.send(info.value)
+        // ws.send('1234ASDF')
+        // this.changeSendOut();
+        Axios.post('music/musicroommsg/sendRoomMsg',
+        {
+          "content": info.value,
+          "creator": userId,
+          "roomId": 888
+        }
+      ).then((result) => {
+        console.log(result);
+      }).catch((err) => {
+
+      });
+        return false;
+      }
+      // ws.send(JSON.stringify({
+      //   value: info.value
+      // }))
     }
     const kgplay = window.kgPlayerV2
     // kgplay.player.initPlayer({
@@ -88,6 +138,8 @@ export default {
       direction,
       choosHandel,
       textarea,
+      inputHandle,
+      info,
       ...toRefs(lyricObj)
     }
   }
@@ -202,6 +254,7 @@ export default {
 
       .chat-content
         flex 1
+        padding 10px
 </style>
 <style lang="stylus">
 .chat-input
