@@ -32,9 +32,89 @@
     </div>
     <div class="col chat-box">
       <section class="chat-content">
-        <header class="">
-
+        <header class="chat-header-opt">
+          <section class="col-box col-box-1">
+            <span class="id-box">ID{{roomId}}</span>
+            <span class="name-box">【{{name}}】</span>
+            <span class="icon-box">
+              <i class="iconfont icon-erji"></i>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-fenxiang"></i></el-button>
+            </span>
+          </section>
+          <section class="col-box col-box-2">
+            <span class="icon-box">
+              <el-button type="text" class="color-btn"><i class="iconfont icon-logo"></i>开源</el-button>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-icon-test"></i>管理</el-button>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-renyuan-"></i>在线({{count}})</el-button>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-wode"></i>我的</el-button>
+            </span>
+          </section>
         </header>
+        <main class="chat-content-box">
+          <div class="chat-item-box">
+            <ul>
+              <li class="li-item left" >
+                <section class="avatar">
+                  <el-dropdown trigger="click">
+                    <span class="el-dropdown-link">
+                      <el-avatar shape="square" :size="50" :src="avatar"></el-avatar>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item>
+                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </section>
+                <section class="user-info">
+                  <p class="user-name">
+                    <span class="icon-box">
+                      <i class=" iconfont icon-svip color1"></i>
+                    </span>
+                    <span>你的懵懵懂</span>
+                  </p>
+                  <p class="level">
+                    <i class=" iconfont icon-xingxing color3"></i>
+                  </p>
+                  <p class="message">您哈鸭</p>
+                  <p class="time">2021-12-12</p>
+                </section>
+              </li>
+              <li class="li-item right">
+                <section class="user-info">
+                  <p class="user-name">
+                    <span class="icon-box">
+                      <i class=" iconfont icon-svip1 color2"></i>
+                    </span>
+                    <span>你的懵懵懂</span>
+                  </p>
+                  <p class="level">
+                    <i class=" iconfont icon-taiyang color3"></i>
+                    <i class=" iconfont icon-taiyang color3"></i>
+                    <i class=" iconfont icon-taiyang color3"></i>
+                  </p>
+                  <p class="message">您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭</p>
+                  <p class="time">2021-12-12</p>
+                </section>
+                <section class="avatar">
+                  <el-dropdown trigger="click">
+                    <span class="el-dropdown-link">
+                      <el-avatar shape="square" :size="50" :src="avatar"></el-avatar>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item>
+                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </section>
+              </li>
+              <li class="li-item center">3</li>
+            </ul>
+          </div>
+        </main>
       </section>
       <section class="chat-input">
         <div class="chat-input-tool">
@@ -73,11 +153,44 @@ export default {
     const direction = 'ltr'
     const textarea = ref('')
     const info = ref('')
+    const squareUrl = '../assets/logo.png'
     const lyricObj = reactive({
       lyricName: '带我去很有的地方(Live)',
       user: '黄晓明',
       play: true
     })
+    const roomInfo = reactive({
+      name: '送你一朵小红花❀',
+      roomId: 1000,
+      count: 10
+    })
+    const userInfo = reactive({
+      sex: 1,
+      avatar: '',
+      name: '我是谁的某某',
+      userId: 1000,
+      online: 1000000000
+    })
+    const messages = [
+      {
+        sex: 1,
+        avatar: '',
+        name: '我是谁的某某',
+        userId: 1000,
+        online: 1000000000,
+        type: 'mes',
+        message: '你好鸭！'
+      },
+      {
+        sex: 2,
+        avatar: '',
+        name: '我是你的某某',
+        userId: 1010,
+        online: 10000,
+        type: 'mes',
+        message: '你也好鸭！'
+      }
+    ]
     const handleOpen = () => {
       console.log('WebSocket open');
     }
@@ -140,7 +253,11 @@ export default {
       textarea,
       inputHandle,
       info,
-      ...toRefs(lyricObj)
+      squareUrl,
+      messages,
+      ...toRefs(lyricObj),
+      ...toRefs(roomInfo),
+      ...toRefs(userInfo),
     }
   }
 }
@@ -241,9 +358,6 @@ export default {
             &:hover
               color #409eff
 
-            .iconfont
-              margin-right 4px
-
         .chat-input-value
           flex 1
           // padding 0px 10px
@@ -255,6 +369,126 @@ export default {
       .chat-content
         flex 1
         padding 10px
+        position relative
+        display flex
+        flex-direction column
+
+        .chat-header-opt
+          display flex
+          flex-direction row
+          justify-content space-between
+          width 100%
+          left 0
+          position absolute
+          padding 0 10px 10px 10px
+          border-bottom 1px solid #202020
+
+          .col-box
+            height 32px
+            display inline-flex
+            flex-direction row
+            align-items center
+
+          .id-box
+            border 1px solid orangered
+            padding 0 4px
+            border-radius 4px
+            color orangered
+            margin-right 2px
+
+          .icon-box
+            color orangered
+            .color-btn
+              color orangered
+
+        .chat-content-box
+          flex 1
+          padding 43px 10px 10px 10px
+          overflow hidden
+
+          .chat-item-box
+            height 100%
+            overflow auto
+
+            ul
+              height 100%
+              padding 20px 0
+              .li-item
+                width 100%
+                display flex
+                font-family 'Gotham-Book'
+
+
+                .user-info
+                  .user-name
+                    font-size 12px
+                    // margin-bottom 10px
+                    margin-top -10px
+
+                  .message
+                    border-radius 4px
+                    padding 8px
+                    position relative
+
+                  .time
+                    font-size 12px
+                    padding 10px 0
+
+                  .level
+                    // padding 10px 0
+
+              .left
+                .avatar
+                  margin-right 20px
+
+                .message
+                  background cadetblue
+                  &::before
+                    content ''
+                    position absolute
+                    top -6px
+                    left -13px
+                    width 15px
+                    height 15px
+                    border-width 0
+                    border-style solid
+                    border-color transparent
+                    border-bottom-width 12px
+                    border-bottom-color cadetblue
+                    border-radius 0 0 0 15px
+                    color #E5E5E5
+
+              .right
+                justify-content flex-end
+                .user-info
+                  margin-right 20px
+
+                  .user-name, .leve, .time, .level
+                    text-align right
+
+                  .message
+                    background #409eff
+                    &::before
+                      content ''
+                      position absolute
+                      right -15px
+                      top -6px
+                      left calc(100% - 2px)
+                      width 15px
+                      height 15px
+                      border-width 0
+                      border-style solid
+                      border-color transparent
+                      border-bottom-width 12px
+                      border-bottom-color #409eff
+                      border-radius 0 0 15px 0
+
+              .center
+                justify-content center
+
+
+
+
 </style>
 <style lang="stylus">
 .chat-input

@@ -8,3 +8,20 @@ html, body {
   margin: 0;
   box-sizing: border-box;
 }
+ul, ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.iconfont {
+  padding: 0 4px
+}
+.color1 {
+  color: #f70875;
+}
+.color2 {
+  color: #08f7d7;
+}
+.color3 {
+  color: #a8ef00;
+}
