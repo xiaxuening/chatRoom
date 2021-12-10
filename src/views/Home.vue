@@ -142,11 +142,13 @@
 </template>
 
 <script>
-import { ref, reactive, toRefs } from 'vue'
-import Axios from 'axios';
+import { ref, reactive, toRefs, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 export default {
   name: 'Home',
   setup(props) {
+    const router = useRouter()
+    const route = useRoute()
     const bgColor = ref('#000')
     const color = ref('#fff')
     const drawer = ref(false)
@@ -244,6 +246,15 @@ export default {
     //   loadTime: 5000,//加载超时时长
     //   playTime: 5000//播放超时时长
     // })
+    onMounted(() => {
+      console.log(12345);
+      const user = localStorage.getItem('user')
+      if (!user) {
+        router.push({
+          name: 'Login'
+        })
+      }
+    })
     return {
       bgColor,
       color,
