@@ -26,18 +26,29 @@
         label-position="top"
         size="small"
       >
-        <el-form-item :label="textType ? '邮箱：' : 'ID或者注册邮箱：'" prop="email">
+        <el-form-item label="邮箱：" prop="email" v-if="textType">
           <el-input v-model="form.email">
-            <template #append v-if="textType">
-              <el-button type="primary" @click="submitForm('ruleForm')">发送</el-button>
+            <template #append>
+              <el-button type="primary" @click="sendCaptchaHandle">发送</el-button>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="验证码：" prop="authCode" v-if="textType">
-          <el-input v-model="form.authCode"></el-input>
+        <el-form-item label="验证码：" prop="captcha" v-if="textType">
+          <el-input v-model="form.captcha"></el-input>
         </el-form-item>
-        <el-form-item label="名字：(取一个意难平的名字叭)" prop="name" v-if="textType">
-          <el-input v-model="form.name"></el-input>
+        <el-form-item :label="textType ? '账号：(取一个意难平的账号叭)' : '账号：'" prop="username">
+          <el-input v-model="form.username"></el-input>
+        </el-form-item>
+        <el-form-item label="验证码：" prop="captcha" v-if="!textType">
+          <el-row :gutter="20">
+            <el-col :span="18">
+              <el-input v-model="form.captcha">
+              </el-input>
+            </el-col>
+            <el-col :span="6">
+              <img :src="captcha" alt="" style="height: 32px; cursor: pointer;" @click="resetCaptchaHandle">
+            </el-col>
+          </el-row>
         </el-form-item>
         <el-form-item label="密码：" prop="password">
           <el-input v-model="form.password" show-password></el-input>
@@ -59,16 +70,20 @@
 import { watch, computed, onMounted, ref, reactive} from 'vue'
 import Particles  from '../components/particles/index'
 import * as Interface from '../data/login'
+import { ElMessage } from 'element-plus'
+import { useRouter, useRoute } from 'vue-router'
 export default {
-  name: 'Login',
+  username: 'Login',
   setup() {
+    const router = useRouter()
     const textType = ref(true)
     const refForm = ref(null)
-    // const textValue = ref('注册')
+    const captcha = ref(null)
+    let uuid = Math.floor(Math.random() * 1000) + Date.now()
     const form = reactive({
       email: '',
-      authCode: '',
-      name: '',
+      captcha: '',
+      username: '',
       password: ''
     })
     const checkPassword = (rule, value, callback) => {
@@ -79,6 +94,9 @@ export default {
       } else {
         callback()
       }
+    }
+    const toLoginHandle = _ => {
+      textType.value = !textType.value
     }
     const rules = {
       email: [
@@ -93,17 +111,17 @@ export default {
           trigger: ['blur'],
         },
       ],
-      authCode: [
+      captcha: [
         {
           required: true,
           message: '请输入验证码',
           trigger: 'blur',
         }
       ],
-      name: [
+      username: [
         {
           required: true,
-          message: '请输入名字',
+          message: '请输入账号',
           trigger: 'blur',
         }
       ],
@@ -118,10 +136,19 @@ export default {
     const submitForm = _ => {
       refForm.value.validate((valid) => {
         if (valid) {
-          console.log(VueUse);
-          console.log(form);
-          console.log(Interface);
-          alert('submit!')
+          const url = textType.value ? '/auth/register' : '/auth/oauth/token'
+          Interface.loginInterfacer(url, {
+            ...form,
+            uuid,
+            grant_type: 'password'
+          }).then((result) => {
+            if (!textType.value) {
+              localStorage.setItem('user_token', result.access_token)
+              router.push({
+                name: 'Home'
+              })
+            }
+          })
         } else {
           return false
         }
@@ -130,23 +157,49 @@ export default {
     const resetForm = _ => {
       refForm.value.resetFields()
     }
-    const toLoginHandle = _ => {
-      textType.value = !textType.value
-    }
     const textValue = computed(_ => textType.value ? '注册' : '登录')
     const resetPassWordHandle = _ => {
 
     }
+    const sendCaptchaHandle = _ => {
+      refForm.value.validateField(['email'], error => {
+        if (!error) {
+          Interface.sendCaptchaInterfacer({
+            email: form.email,
+            uuid
+          }).then((message) => {
+            ElMessage({
+              message,
+              type: 'success'
+            })
+          })
+        }
+      })
+
+    }
+    watch(textType, (count, prevCount) => {
+      if (prevCount) {
+        captcha.value = `/auth/captcha?uuid=${uuid}`
+      }
+    })
+    const resetCaptchaHandle = _ => {
+      console.log(12345);
+      uuid = Math.floor(Math.random() * 1000) + Date.now()
+      captcha.value = `/auth/captcha?uuid=${uuid}`
+    }
     return {
       textType,
       form,
+      captcha,
       rules,
       submitForm,
       resetForm,
       refForm,
       textValue,
       toLoginHandle,
-      resetPassWordHandle
+      resetPassWordHandle,
+      sendCaptchaHandle,
+      resetCaptchaHandle
      }
   },
   components: {

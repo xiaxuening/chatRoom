@@ -144,6 +144,7 @@
 <script>
 import { ref, reactive, toRefs, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import * as Interface from '../data/home'
 export default {
   name: 'Home',
   setup(props) {
@@ -173,6 +174,7 @@ export default {
       userId: 1000,
       online: 1000000000
     })
+    let userObj = {}
     const messages = [
       {
         sex: 1,
@@ -205,34 +207,39 @@ export default {
     const handleMessage = (res) => {
       console.log('WebSocket message', JSON.parse(res.data))
     }
-    const userId = new Date().getTime()
-    const ws = new WebSocket(`ws:192.168.3.56:8095/mws?userId=${userId}&roomId=888&token=`)
-    ws.addEventListener('open', handleOpen, false)
-    ws.addEventListener('close', handleClose, false)
-    ws.addEventListener('error', handleError, false)
-    ws.addEventListener('message', handleMessage, false)
+    const token = localStorage.getItem('user_token')
+    console.log(userObj.id);
     const choosHandel = _ => {
       drawer.value = true
     }
     const inputHandle = (e) => {
       if (e.key == "Enter" || e.code == "Enter" || e.keyCode == 13) {
         e.returnValue = false;
-        info.value = textarea.value
+        info.value = textarea.value.replace(/\n/g, '')
         textarea.value = ''
+        Interface.sendRoomMsgInterfacer(
+          {
+            content: info.value.replace(/\n/g, ''),
+            roomId: 888,
+            creator: userObj.id
+          }
+        ).then(res => {
+
+        })
         // ws.send(info.value)
         // ws.send('1234ASDF')
         // this.changeSendOut();
-        Axios.post('music/musicroommsg/sendRoomMsg',
-        {
-          "content": info.value,
-          "creator": userId,
-          "roomId": 888
-        }
-      ).then((result) => {
-        console.log(result);
-      }).catch((err) => {
+      //   Axios.post('music/musicroommsg/sendRoomMsg',
+      //   {
+      //     "content": info.value,
+      //     "creator": userId,
+      //     "roomId": 888
+      //   }
+      // ).then((result) => {
+      //   console.log(result);
+      // }).catch((err) => {
 
-      });
+      // });
         return false;
       }
       // ws.send(JSON.stringify({
@@ -247,13 +254,23 @@ export default {
     //   playTime: 5000//播放超时时长
     // })
     onMounted(() => {
-      console.log(12345);
-      const user = localStorage.getItem('user')
+      const user = localStorage.getItem('user_token')
       if (!user) {
         router.push({
           name: 'Login'
         })
+        return
       }
+      Interface.userInfoInterfacer().then(res => {
+        console.log(res);
+        userObj = res
+        console.log(userObj);
+        const ws = new WebSocket(`ws:192.168.3.56:8095/mws?userId=${userObj.id}&roomId=888&token=`)
+        ws.addEventListener('open', handleOpen, false)
+        ws.addEventListener('close', handleClose, false)
+        ws.addEventListener('error', handleError, false)
+        ws.addEventListener('message', handleMessage, false)
+      })
     })
     return {
       bgColor,
