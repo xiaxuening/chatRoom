@@ -34,8 +34,8 @@
       <section class="chat-content">
         <header class="chat-header-opt">
           <section class="col-box col-box-1">
-            <span class="id-box">ID{{roomId}}</span>
-            <span class="name-box">【{{name}}】</span>
+            <span class="id-box">房间名字</span>
+            <span class="name-box">【{{roomInfo.name}}】</span>
             <span class="icon-box">
               <i class="iconfont icon-erji"></i>
               <el-button type="text" class="color-btn"><i class="iconfont icon-fenxiang"></i></el-button>
@@ -53,11 +53,44 @@
         <main class="chat-content-box">
           <div class="chat-item-box">
             <ul>
-              <li class="li-item left" >
+              <li
+                v-for="({creator, content, createDate, ...item}, index) in data" :key="index"
+                :class="['li-item', creator === userInfo.id ? 'right' : 'left']"
+              >
+                <section class="user-info">
+                  <p class="user-name">
+                    <span class="icon-box">
+                      <i class=" iconfont icon-svip1 color2"></i>
+                    </span>
+                    <span>{{setUserName(creator)}}</span>
+                  </p>
+                  <p class="level">
+                    <i class=" iconfont icon-taiyang color3"></i>
+                    <i class=" iconfont icon-taiyang color3"></i>
+                    <i class=" iconfont icon-taiyang color3"></i>
+                  </p>
+                  <p class="message">{{content}}</p>
+                  <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH-mm-ss')}}</p>
+                </section>
                 <section class="avatar">
                   <el-dropdown trigger="click">
                     <span class="el-dropdown-link">
-                      <el-avatar shape="square" :size="50" :src="avatar"></el-avatar>
+                      <!-- <el-avatar shape="square" :size="50" :src="avatar" ></el-avatar> -->
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <!-- <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item> -->
+                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </section>
+              </li>
+              <!-- <li class="li-item left" >
+                <section class="avatar">
+                  <el-dropdown trigger="click">
+                    <span class="el-dropdown-link">
+                      <el-avatar shape="square" :size="50" :src="avatar">{{username}}</el-avatar>
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
@@ -80,27 +113,27 @@
                   <p class="message">您哈鸭</p>
                   <p class="time">2021-12-12</p>
                 </section>
-              </li>
-              <li class="li-item right">
+              </li> -->
+              <!-- <li class="li-item right">
                 <section class="user-info">
                   <p class="user-name">
                     <span class="icon-box">
                       <i class=" iconfont icon-svip1 color2"></i>
                     </span>
-                    <span>你的懵懵懂</span>
+                    <span>{{userInfo.nickName}}</span>
                   </p>
                   <p class="level">
                     <i class=" iconfont icon-taiyang color3"></i>
                     <i class=" iconfont icon-taiyang color3"></i>
                     <i class=" iconfont icon-taiyang color3"></i>
                   </p>
-                  <p class="message">您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭您哈鸭</p>
-                  <p class="time">2021-12-12</p>
+                  <p class="message">miim</p>
+                  <p class="time"></p>
                 </section>
                 <section class="avatar">
                   <el-dropdown trigger="click">
                     <span class="el-dropdown-link">
-                      <el-avatar shape="square" :size="50" :src="avatar"></el-avatar>
+                      <el-avatar shape="square" :size="50" :src="avatar" ></el-avatar>
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
@@ -111,7 +144,7 @@
                   </el-dropdown>
                 </section>
               </li>
-              <li class="li-item center">3</li>
+              <li class="li-item center">{{data.length}}</li> -->
             </ul>
           </div>
         </main>
@@ -162,39 +195,14 @@ export default {
       user: '黄晓明',
       play: true
     })
-    const roomInfo = reactive({
-      name: '送你一朵小红花❀',
-      roomId: 1000,
-      count: 10
+
+    const userInfo = ref({})
+    const roomInfo= ref({})
+    const roomUserList= ref({})
+    const roomMsgList = reactive({
+      data: []
     })
-    const userInfo = reactive({
-      sex: 1,
-      avatar: '',
-      name: '我是谁的某某',
-      userId: 1000,
-      online: 1000000000
-    })
-    let userObj = {}
-    const messages = [
-      {
-        sex: 1,
-        avatar: '',
-        name: '我是谁的某某',
-        userId: 1000,
-        online: 1000000000,
-        type: 'mes',
-        message: '你好鸭！'
-      },
-      {
-        sex: 2,
-        avatar: '',
-        name: '我是你的某某',
-        userId: 1010,
-        online: 10000,
-        type: 'mes',
-        message: '你也好鸭！'
-      }
-    ]
+    const wsMessage = ref({})
     const handleOpen = () => {
       console.log('WebSocket open');
     }
@@ -206,9 +214,12 @@ export default {
     }
     const handleMessage = (res) => {
       console.log('WebSocket message', JSON.parse(res.data))
+      wsMessage.value = JSON.parse(res.data)
+      if (wsMessage.value.type === 'msg') {
+        roomMsgList.data.push(JSON.parse(res.data))
+      }
     }
     const token = localStorage.getItem('user_token')
-    console.log(userObj.id);
     const choosHandel = _ => {
       drawer.value = true
     }
@@ -220,40 +231,28 @@ export default {
         Interface.sendRoomMsgInterfacer(
           {
             content: info.value.replace(/\n/g, ''),
-            roomId: 888,
-            creator: userObj.id
+            roomId: roomInfo.value.id,
+            creator: userInfo.value.id
           }
         ).then(res => {
-
+          console.log(res);
         })
-        // ws.send(info.value)
-        // ws.send('1234ASDF')
-        // this.changeSendOut();
-      //   Axios.post('music/musicroommsg/sendRoomMsg',
-      //   {
-      //     "content": info.value,
-      //     "creator": userId,
-      //     "roomId": 888
-      //   }
-      // ).then((result) => {
-      //   console.log(result);
-      // }).catch((err) => {
-
-      // });
         return false;
       }
-      // ws.send(JSON.stringify({
-      //   value: info.value
-      // }))
     }
-    const kgplay = window.kgPlayerV2
-    // kgplay.player.initPlayer({
-    //   appid,//open.kugou.com颁发的appid
-    //   ticket,//有效凭证，见最底部"服务端获取ticket"
-    //   loadTime: 5000,//加载超时时长
-    //   playTime: 5000//播放超时时长
-    // })
-    onMounted(() => {
+    const extractColorByName = (name) => {
+      var temp = [];
+      temp.push("#");
+      for (let index = 0; index < name.length; index++) {
+        temp.push(parseInt(name[index].charCodeAt(0), 10).toString(16));
+      }
+      return temp.slice(0, 5).join('').slice(0, 4);
+    }
+    const getRoomMsgListAndgetRoomUserList = async roomId => {
+      roomMsgList.data = await Interface.getRoomMsgListInterfacer({roomId})
+      roomUserList.value = await Interface.getRoomUserListInterfacer(roomId)
+    }
+    const init = async _ => {
       const user = localStorage.getItem('user_token')
       if (!user) {
         router.push({
@@ -261,17 +260,30 @@ export default {
         })
         return
       }
-      Interface.userInfoInterfacer().then(res => {
-        console.log(res);
-        userObj = res
-        console.log(userObj);
-        const ws = new WebSocket(`ws:192.168.3.56:8095/mws?userId=${userObj.id}&roomId=888&token=`)
+      console.log(process.env.VUE_APP_ROBOT_HOST)
+      Promise.all([
+        Interface.initRoomInterfacer(),
+        Interface.userInfoInterfacer()
+      ]).then(([roomData, userData]) => {
+        const ws = new WebSocket(`ws:${process.env.VUE_APP_ROBOT_HOST}/mws?userId=${userData.id}&roomId=${roomData.id}&token=`)
         ws.addEventListener('open', handleOpen, false)
         ws.addEventListener('close', handleClose, false)
         ws.addEventListener('error', handleError, false)
         ws.addEventListener('message', handleMessage, false)
+        userInfo.value = userData
+        roomInfo.value = roomData
+        getRoomMsgListAndgetRoomUserList(roomData.id)
       })
-    })
+    }
+    const setUserName = userId => {
+      // console.log(roomUserList.value);
+      if (roomUserList.value) {
+      const curUser = roomUserList?.value?.find(item => item.id === userId) ?? {}
+      // console.log(curUser);
+      return curUser?.nickName
+      }
+    }
+    onMounted(init)
     return {
       bgColor,
       color,
@@ -282,10 +294,13 @@ export default {
       inputHandle,
       info,
       squareUrl,
-      messages,
+      userInfo,
+      roomInfo,
+      wsMessage,
+      extractColorByName,
+      setUserName,
       ...toRefs(lyricObj),
-      ...toRefs(roomInfo),
-      ...toRefs(userInfo),
+      ...toRefs(roomMsgList),
     }
   }
 }
@@ -400,6 +415,7 @@ export default {
         position relative
         display flex
         flex-direction column
+        overflow hidden
 
         .chat-header-opt
           display flex
@@ -457,6 +473,7 @@ export default {
                     border-radius 4px
                     padding 8px
                     position relative
+                    height 36px
 
                   .time
                     font-size 12px

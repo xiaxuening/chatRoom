@@ -1,4 +1,5 @@
-const target = 'http://zhy1024.cn'
+// const target = 'http://zhy1024.cn'
+const target = 'http://82.157.75.247:6081'
 // const target = 'http://192.168.3.56:8080'
 module.exports = {
   devServer: {

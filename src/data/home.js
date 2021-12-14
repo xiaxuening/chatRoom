@@ -4,10 +4,22 @@ export function userInfoInterfacer(reqArgs) {
     .then(data => data)
 }
 export function sendRoomMsgInterfacer(reqArgs) {
-    return accessInterface({url: 'music/musicroommsg/sendRoomMsg', method: 'post', reqArgs})
-    .then(data => data)
+  return accessInterface({url: 'music/musicroommsg/sendRoomMsg', method: 'post', reqArgs})
+  .then(data => data)
 }
-// export function getCaptchaInterfacer(reqArgs) {
-//     return accessInterface({url: '/auth/captcha', method: 'get', reqArgs, errmsg: '', headers: {responseType: 'blob'}, downFile: true})
-//     .then(data => data)
+export function initRoomInterfacer(reqArgs) {
+  return accessInterface({url: '/music/musicroom/initRoom', method: 'get', reqArgs})
+  .then(data => data)
+}
+export function getRoomMsgListInterfacer(reqArgs) {
+  return accessInterface({url: '/music/musicroommsg/getRoomMsgList', method: 'post', reqArgs})
+  .then(data => data)
+}
+export function getRoomUserListInterfacer(reqArgs) {
+  return accessInterface({url: `/music/musicroom/getUsers/${reqArgs}`, method: 'get'})
+  .then(data => data)
+}
+// export function getRoomUserListInterfacer(reqArgs) {
+//   return accessInterface({url: `/music/musicroom/getUsers/${reqArgs}`, method: 'get'})
+//   .then(data => data)
 // }
