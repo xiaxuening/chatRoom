@@ -4,7 +4,6 @@ import { ElMessage } from 'element-plus'
 const qs = require('qs')
 axios.defaults.timeout = 10e3
 axios.interceptors.request.use((config) => {
-  console.log(config);
   if (config.url === '/auth/oauth/token') {
     config.headers.Authorization = 'Basic aHk6aHk='
     config.headers['content-type'] = 'application/x-www-form-urlencoded'
@@ -50,7 +49,6 @@ export default function ({
   }
   return axios(payload)
     .then((res) => {
-      console.log(res);
       const {data, code, msg} = res.data
       if (downFile) {
         return res.data

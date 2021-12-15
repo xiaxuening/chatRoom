@@ -45,12 +45,15 @@
             <span class="icon-box">
               <el-button type="text" class="color-btn"><i class="iconfont icon-logo"></i>开源</el-button>
               <el-button type="text" class="color-btn"><i class="iconfont icon-icon-test"></i>管理</el-button>
-              <el-button type="text" class="color-btn"><i class="iconfont icon-renyuan-"></i>在线({{count}})</el-button>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-renyuan-"></i>在线({{Math.round(output)}})</el-button>
               <el-button type="text" class="color-btn"><i class="iconfont icon-wode"></i>我的</el-button>
             </span>
           </section>
         </header>
         <main class="chat-content-box">
+          <div>
+
+          </div>
           <div class="chat-item-box">
             <ul>
               <li
@@ -75,7 +78,17 @@
                 <section class="avatar">
                   <el-dropdown trigger="click">
                     <span class="el-dropdown-link">
-                      <!-- <el-avatar shape="square" :size="50" :src="avatar" ></el-avatar> -->
+                      <el-avatar shape="square" :size="50">
+                        <div
+                        :style="{
+                          width: '100%',
+                          height: '100%',
+                          'background-size': '200px',
+                          'background-image': setUrl(creator),
+                          'background-position': setPosition(creator)
+                        }">
+                        </div>
+                      </el-avatar>
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
@@ -175,8 +188,9 @@
 </template>
 
 <script>
-import { ref, reactive, toRefs, onMounted } from 'vue'
+import { ref, reactive, toRefs, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useTransition, TransitionPresets } from '@vueuse/core'
 import * as Interface from '../data/home'
 export default {
   name: 'Home',
@@ -195,10 +209,10 @@ export default {
       user: '黄晓明',
       play: true
     })
-
+    const count = ref(0)
     const userInfo = ref({})
     const roomInfo= ref({})
-    const roomUserList= ref({})
+    const roomUserList= ref([])
     const roomMsgList = reactive({
       data: []
     })
@@ -217,6 +231,9 @@ export default {
       wsMessage.value = JSON.parse(res.data)
       if (wsMessage.value.type === 'msg') {
         roomMsgList.data.push(JSON.parse(res.data))
+      }
+      if (wsMessage.value.type === 'online') {
+        count.value = JSON.parse(res.data).data.count
       }
     }
     const token = localStorage.getItem('user_token')
@@ -260,7 +277,6 @@ export default {
         })
         return
       }
-      console.log(process.env.VUE_APP_ROBOT_HOST)
       Promise.all([
         Interface.initRoomInterfacer(),
         Interface.userInfoInterfacer()
@@ -276,13 +292,39 @@ export default {
       })
     }
     const setUserName = userId => {
-      // console.log(roomUserList.value);
-      if (roomUserList.value) {
       const curUser = roomUserList?.value?.find(item => item.id === userId) ?? {}
-      // console.log(curUser);
       return curUser?.nickName
+    }
+    const setPosition = userId => {
+      const curUser = roomUserList?.value?.find(item => item.id === userId) ?? {}
+      let positionX = 0
+      let positionY = 0
+      if (curUser.headUrl) return `${positionX} ${positionY}`
+      const remainder = Number(curUser.id?.slice(0, curUser.id.length - 2)) % 16
+      if ([0, 1, 2, 3].includes(remainder)) {
+        return `${remainder % 4 * 50}px 0`
+      }
+      if ([4, 5, 6, 7].includes(remainder)) {
+        return `${remainder % 4 * 50}px 50px`
+      }
+      if ([8, 9, 10, 11].includes(remainder)) {
+        return `${remainder % 4 * 50}px 100px`
+      }
+      if ([12, 13, 14, 15].includes(remainder)) {
+        return `${remainder % 4 * 50}px 150px`
       }
     }
+    const setUrl = userId => {
+      const curUser = roomUserList?.value?.find(item => item.id === userId) ?? {}
+      if (curUser.headUrl)  return `url(${curUser.headUrl})`
+      return `url(${require('../assets/img/article.png')})`
+    }
+    const output = useTransition(count, {
+      duration: 3000,
+      transition: TransitionPresets.easeOutExpo,
+    })
+
+    // const userName = computed(_ => {})
     onMounted(init)
     return {
       bgColor,
@@ -299,6 +341,10 @@ export default {
       wsMessage,
       extractColorByName,
       setUserName,
+      setPosition,
+      setUrl,
+      count,
+      output,
       ...toRefs(lyricObj),
       ...toRefs(roomMsgList),
     }
