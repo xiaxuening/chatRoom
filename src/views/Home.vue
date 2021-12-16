@@ -58,46 +58,87 @@
             <ul>
               <li
                 v-for="({creator, content, createDate, ...item}, index) in data" :key="index"
-                :class="['li-item', creator === userInfo.id ? 'right' : 'left']"
               >
-                <section class="user-info">
-                  <p class="user-name">
-                    <span class="icon-box">
-                      <i class=" iconfont icon-svip1 color2"></i>
-                    </span>
-                    <span>{{setUserName(creator)}}</span>
-                  </p>
-                  <p class="level">
-                    <i class=" iconfont icon-taiyang color3"></i>
-                    <i class=" iconfont icon-taiyang color3"></i>
-                    <i class=" iconfont icon-taiyang color3"></i>
-                  </p>
-                  <p class="message">{{content}}</p>
-                  <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH-mm-ss')}}</p>
-                </section>
-                <section class="avatar">
-                  <el-dropdown trigger="click">
-                    <span class="el-dropdown-link">
-                      <el-avatar shape="square" :size="50">
-                        <div
-                        :style="{
-                          width: '100%',
-                          height: '100%',
-                          'background-size': '200px',
-                          'background-image': setUrl(creator),
-                          'background-position': setPosition(creator)
-                        }">
-                        </div>
-                      </el-avatar>
-                    </span>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <!-- <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item> -->
-                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </section>
+                <div v-if="creator === userInfo.id" class="right li-item">
+                  <section class="user-info">
+                    <p class="user-name">
+                      <span class="icon-box">
+                        <i class=" iconfont icon-svip1 color2"></i>
+                      </span>
+                      <span>{{setUserName(creator)}}</span>
+                    </p>
+                    <p class="level">
+                      <i class=" iconfont icon-taiyang color3"></i>
+                      <i class=" iconfont icon-taiyang color3"></i>
+                      <i class=" iconfont icon-taiyang color3"></i>
+                    </p>
+                    <p class="message">{{content}}</p>
+                    <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH-mm-ss')}}</p>
+                  </section>
+                  <section class="avatar">
+                    <el-dropdown trigger="click">
+                      <span class="el-dropdown-link">
+                        <el-avatar shape="square" :size="50">
+                          <div
+                          :style="{
+                            width: '100%',
+                            height: '100%',
+                            'background-size': '200px',
+                            'background-image': setUrl(creator),
+                            'background-position': setPosition(creator)
+                          }">
+                          </div>
+                        </el-avatar>
+                      </span>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <!-- <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item> -->
+                          <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </section>
+                </div>
+                <div v-else class="left li-item">
+                  <section class="avatar">
+                    <el-dropdown trigger="click">
+                      <span class="el-dropdown-link">
+                        <el-avatar shape="square" :size="50">
+                          <div
+                          :style="{
+                            width: '100%',
+                            height: '100%',
+                            'background-size': '200px',
+                            'background-image': setUrl(creator),
+                            'background-position': setPosition(creator)
+                          }">
+                          </div>
+                        </el-avatar>
+                      </span>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <!-- <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item> -->
+                          <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </section>
+                  <section class="user-info">
+                    <p class="user-name">
+                      <span class="icon-box">
+                        <i class=" iconfont icon-svip1 color2"></i>
+                      </span>
+                      <span>{{setUserName(creator)}}</span>
+                    </p>
+                    <p class="level">
+                      <i class=" iconfont icon-taiyang color3"></i>
+                      <i class=" iconfont icon-taiyang color3"></i>
+                      <i class=" iconfont icon-taiyang color3"></i>
+                    </p>
+                    <p class="message">{{content}}</p>
+                    <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH-mm-ss')}}</p>
+                  </section>
+                </div>
               </li>
               <!-- <li class="li-item left" >
                 <section class="avatar">
@@ -188,9 +229,9 @@
 </template>
 
 <script>
-import { ref, reactive, toRefs, onMounted, computed } from 'vue'
+import { ref, reactive, toRefs, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useTransition, TransitionPresets } from '@vueuse/core'
+import { useTransition, TransitionPresets, useEventListener } from '@vueuse/core'
 import * as Interface from '../data/home'
 export default {
   name: 'Home',
@@ -231,6 +272,7 @@ export default {
       wsMessage.value = JSON.parse(res.data)
       if (wsMessage.value.type === 'msg') {
         roomMsgList.data.push(JSON.parse(res.data))
+        console.log(roomMsgList.data);
       }
       if (wsMessage.value.type === 'online') {
         count.value = JSON.parse(res.data).data.count
@@ -281,7 +323,7 @@ export default {
         Interface.initRoomInterfacer(),
         Interface.userInfoInterfacer()
       ]).then(([roomData, userData]) => {
-        const ws = new WebSocket(`ws:${process.env.VUE_APP_ROBOT_HOST}/mws?userId=${userData.id}&roomId=${roomData.id}&token=`)
+        const ws = new WebSocket(`ws:${process.env.VUE_APP_ROBOT_HOST}/music/mws?userId=${userData.id}&roomId=${roomData.id}&token=`)
         ws.addEventListener('open', handleOpen, false)
         ws.addEventListener('close', handleClose, false)
         ws.addEventListener('error', handleError, false)
@@ -323,7 +365,13 @@ export default {
       duration: 3000,
       transition: TransitionPresets.easeOutExpo,
     })
-
+    watch(
+      () => [...roomMsgList.data],
+      (data, prevData) => {
+        // console.log(prevData)
+        console.log(data);
+      }
+    )
     // const userName = computed(_ => {})
     onMounted(init)
     return {
@@ -457,10 +505,7 @@ export default {
 
       .chat-content
         flex 1
-        padding 10px
         position relative
-        display flex
-        flex-direction column
         overflow hidden
 
         .chat-header-opt
@@ -492,13 +537,19 @@ export default {
               color orangered
 
         .chat-content-box
-          flex 1
-          padding 43px 10px 10px 10px
           overflow hidden
+          position absolute
+          top 43px
+          left 0
+          height 100%
+          width 100%
+          padding-bottom 43px
+          overflow-y scroll
 
           .chat-item-box
-            height 100%
-            overflow auto
+            // height 100%
+            padding 0 18px
+
 
             ul
               height 100%
@@ -507,6 +558,7 @@ export default {
                 width 100%
                 display flex
                 font-family 'Gotham-Book'
+                padding 10px 0
 
 
                 .user-info
