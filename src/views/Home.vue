@@ -5,6 +5,11 @@
     <div class="col music-box">
       <section class="music-music"></section>
       <section class="music-opt">
+        <audio
+          ref="audio"
+          class="dn"
+          :src="audioUrl"
+          ></audio>
         <div class="progress">
           <div class="progress-item"></div>
         </div>
@@ -15,7 +20,7 @@
         <div class="control">
           <el-button-group>
             <el-button type="text" @click="play = !play"><i :class="['iconfont', play ? 'icon-bofang': 'icon-zanting']"></i></el-button>
-            <el-button type="text"><i class=" iconfont icon-qiege"></i></el-button>
+            <el-button type="text" @click="passSongHandle"><i class=" iconfont icon-qiege"></i></el-button>
             <el-button type="text"><i class=" iconfont icon-shoucang"></i></el-button>
             <el-button type="text"><i class=" iconfont icon-suiji"></i></el-button>
           </el-button-group>
@@ -50,10 +55,7 @@
             </span>
           </section>
         </header>
-        <main class="chat-content-box">
-          <div>
-
-          </div>
+        <main class="chat-content-box" id="divmsg">
           <div class="chat-item-box">
             <ul>
               <li
@@ -224,14 +226,35 @@
     title="I like listening to music."
     :direction="direction"
   >
-    <span>Hi, there!</span>
+    <el-input v-model="song" placeholder="Please input music.">
+      <template #append>
+        <el-button :icon="Search" @click="searchHandle"></el-button>
+      </template>
+    </el-input>
+    <div class="infinite-list-wrapper" style="overflow: auto">
+      <ul
+        v-infinite-scroll="searchHandle"
+        class="list"
+        infinite-scroll-disabled="disabled"
+      >
+        <li v-for="({singerName, songName, ...item}, index) in list" :key="index" class="list-item">
+           <el-button type="text" @click="addSongHandle(item)">
+             {{songName}} -- {{singerName}}
+           </el-button>
+        </li>
+      </ul>
+      <p v-if="loading">Loading...</p>
+      <!-- <p v-if="noMore">No more</p> -->
+  </div>
   </el-drawer>
 </template>
 
 <script>
-import { ref, reactive, toRefs, onMounted, computed, watch } from 'vue'
+import { ref, reactive, toRefs, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTransition, TransitionPresets, useEventListener } from '@vueuse/core'
+import { ElMessageBox, ElMessage } from 'element-plus'
+// import { Search } from '@element-plus/icons-vue'
 import * as Interface from '../data/home'
 export default {
   name: 'Home',
@@ -244,6 +267,10 @@ export default {
     const direction = 'ltr'
     const textarea = ref('')
     const info = ref('')
+    const songData = reactive({
+      audioUrl: '',
+      audio: null
+    })
     const squareUrl = '../assets/logo.png'
     const lyricObj = reactive({
       lyricName: '带我去很有的地方(Live)',
@@ -257,6 +284,7 @@ export default {
     const roomMsgList = reactive({
       data: []
     })
+    const dialogVisible = ref(true)
     const wsMessage = ref({})
     const handleOpen = () => {
       console.log('WebSocket open');
@@ -272,10 +300,13 @@ export default {
       wsMessage.value = JSON.parse(res.data)
       if (wsMessage.value.type === 'msg') {
         roomMsgList.data.push(JSON.parse(res.data))
-        console.log(roomMsgList.data);
-      }
-      if (wsMessage.value.type === 'online') {
+      } else if (wsMessage.value.type === 'online') {
         count.value = JSON.parse(res.data).data.count
+      } else if (wsMessage.value.type === 'playSong') {
+        console.log(wsMessage.value.data)
+        songData.audioUrl = wsMessage.value.data.playUrl;
+        songData.audio.play()
+        console.log(songData.audioUrl);
       }
     }
     const token = localStorage.getItem('user_token')
@@ -294,22 +325,35 @@ export default {
             creator: userInfo.value.id
           }
         ).then(res => {
-          console.log(res);
+          boxScroll()
         })
         return false;
       }
     }
-    const extractColorByName = (name) => {
-      var temp = [];
-      temp.push("#");
-      for (let index = 0; index < name.length; index++) {
-        temp.push(parseInt(name[index].charCodeAt(0), 10).toString(16));
-      }
-      return temp.slice(0, 5).join('').slice(0, 4);
-    }
     const getRoomMsgListAndgetRoomUserList = async roomId => {
       roomMsgList.data = await Interface.getRoomMsgListInterfacer({roomId})
       roomUserList.value = await Interface.getRoomUserListInterfacer(roomId)
+      boxScroll()
+      confirm()
+    }
+    const confirm = _ => {
+      ElMessageBox.alert(
+        '欢迎来音乐聊天室聊天，即将为你播放音乐!?',
+        '温馨提示',
+        {
+          confirmButtonText: 'OK',
+          type: 'warning',
+        }
+      )
+        .then(() => {
+          songData.audio.play()
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: 'Delete canceled',
+          })
+        })
     }
     const init = async _ => {
       const user = localStorage.getItem('user_token')
@@ -365,17 +409,50 @@ export default {
       duration: 3000,
       transition: TransitionPresets.easeOutExpo,
     })
-    watch(
-      () => [...roomMsgList.data],
-      (data, prevData) => {
-        // console.log(prevData)
-        console.log(data);
-      }
-    )
+
+    const boxScroll = (o) => {
+      const div = document.getElementById("divmsg");
+      div.scrollTop = div.scrollHeight
+    }
+    const song = ref('')
+    const Search = ref('')
+    const loading = ref(false)
+    const disabled = computed(() => loading.value)
+    const searchSong = reactive({
+      list: [],
+      total: 0
+    })
+    const searchHandle = async _ => {
+      loading.value = true
+      const data = await Interface.searchSongInterfacer(
+        {
+          keyword: song.value
+        }
+      )
+      console.log(data);
+      searchSong.list = data.list
+      loading.value = false
+    }
+    const addSongHandle = async ({fileHash, sqfileHash, thirdId}) => {
+      const data = await Interface.addSongInterfacer(
+        {
+          thirdId,
+          fileHash,
+          roomId: roomInfo.value.id
+        }
+      )
+      console.log(data)
+    }
+    const passSongHandle = async ({fileHash, sqfileHash, thirdId}) => {
+      const data = await Interface.passSongInterfacer(roomInfo.value.id)
+      console.log(data)
+    }
     // const userName = computed(_ => {})
     onMounted(init)
     return {
       bgColor,
+      loading,
+      disabled,
       color,
       drawer,
       direction,
@@ -387,14 +464,21 @@ export default {
       userInfo,
       roomInfo,
       wsMessage,
-      extractColorByName,
       setUserName,
       setPosition,
       setUrl,
       count,
       output,
+      dialogVisible,
+      searchHandle,
+      song,
+      Search,
+      addSongHandle,
+      passSongHandle,
       ...toRefs(lyricObj),
       ...toRefs(roomMsgList),
+      ...toRefs(songData),
+      ...toRefs(searchSong),
     }
   }
 }
