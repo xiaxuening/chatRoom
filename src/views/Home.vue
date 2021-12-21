@@ -1,29 +1,47 @@
 <template>
   <el-main
+    class=""
     :style="{'background': bgColor, color}"
   >
     <div class="col music-box">
-      <section class="music-music"></section>
+      <section class="music-music">
+        <div class="lyric-box-bg" :style="{'background-image': `url(${img})`}"></div>
+        <div class="lyric-box">
+          <ul class="lyric-ul">
+            <li class="lyric-item" v-for="({content, time}, index) in lyrics" :key="index">
+              {{content}}
+            </li>
+          </ul>
+        </div>
+      </section>
       <section class="music-opt">
         <audio
           ref="audio"
           class="dn"
           :src="audioUrl"
+          @oaly="onplay"
+          @timeupdate="audioTimeUpdate"
           ></audio>
         <div class="progress">
-          <div class="progress-item"></div>
+          <div class="progress-item" :style="{'width': `${audioPercent}%`}"></div>
         </div>
         <div class="lyric">
-          <h4>{{lyricName}}</h4>
-          <p>{{user}}</p>
-        </div>
-        <div class="control">
-          <el-button-group>
-            <el-button type="text" @click="play = !play"><i :class="['iconfont', play ? 'icon-bofang': 'icon-zanting']"></i></el-button>
-            <el-button type="text" @click="passSongHandle"><i class=" iconfont icon-qiege"></i></el-button>
-            <el-button type="text"><i class=" iconfont icon-shoucang"></i></el-button>
-            <el-button type="text"><i class=" iconfont icon-suiji"></i></el-button>
-          </el-button-group>
+          <section class="col-lyric">
+            <div class="lyric-img rotate-center">
+              <img :src="authorAvatar" alt="">
+            </div>
+            <div class="lyric-info">
+              <h4>{{songName}}</h4>
+              <p>{{authorName}}</p>
+            </div>
+          </section>
+          <section class="col-lyric lyric-opt">
+            <el-button-group>
+              <el-button type="text" @click="onPause"><i :class="['iconfont', play ? 'icon-bofang': 'icon-zanting']"></i></el-button>
+              <el-button type="text" @click="passSongHandle"><i class=" iconfont icon-qiege"></i></el-button>
+              <el-button type="text"><i class=" iconfont icon-shoucang"></i></el-button>
+            </el-button-group>
+          </section>
         </div>
         <div class="tool">
           <el-button-group>
@@ -50,7 +68,7 @@
             <span class="icon-box">
               <el-button type="text" class="color-btn"><i class="iconfont icon-logo"></i>开源</el-button>
               <el-button type="text" class="color-btn"><i class="iconfont icon-icon-test"></i>管理</el-button>
-              <el-button type="text" class="color-btn"><i class="iconfont icon-renyuan-"></i>在线({{Math.round(output)}})</el-button>
+              <el-button type="text" class="color-btn"><i class="iconfont icon-renyuan-"></i>在线({{count}})</el-button>
               <el-button type="text" class="color-btn"><i class="iconfont icon-wode"></i>我的</el-button>
             </span>
           </section>
@@ -58,6 +76,7 @@
         <main class="chat-content-box" id="divmsg">
           <div class="chat-item-box">
             <ul>
+               <section class="text-blur-out">.text-blur-out</section>
               <li
                 v-for="({creator, content, createDate, ...item}, index) in data" :key="index"
               >
@@ -142,65 +161,6 @@
                   </section>
                 </div>
               </li>
-              <!-- <li class="li-item left" >
-                <section class="avatar">
-                  <el-dropdown trigger="click">
-                    <span class="el-dropdown-link">
-                      <el-avatar shape="square" :size="50" :src="avatar">{{username}}</el-avatar>
-                    </span>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item>
-                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </section>
-                <section class="user-info">
-                  <p class="user-name">
-                    <span class="icon-box">
-                      <i class=" iconfont icon-svip color1"></i>
-                    </span>
-                    <span>你的懵懵懂</span>
-                  </p>
-                  <p class="level">
-                    <i class=" iconfont icon-xingxing color3"></i>
-                  </p>
-                  <p class="message">您哈鸭</p>
-                  <p class="time">2021-12-12</p>
-                </section>
-              </li> -->
-              <!-- <li class="li-item right">
-                <section class="user-info">
-                  <p class="user-name">
-                    <span class="icon-box">
-                      <i class=" iconfont icon-svip1 color2"></i>
-                    </span>
-                    <span>{{userInfo.nickName}}</span>
-                  </p>
-                  <p class="level">
-                    <i class=" iconfont icon-taiyang color3"></i>
-                    <i class=" iconfont icon-taiyang color3"></i>
-                    <i class=" iconfont icon-taiyang color3"></i>
-                  </p>
-                  <p class="message">miim</p>
-                  <p class="time"></p>
-                </section>
-                <section class="avatar">
-                  <el-dropdown trigger="click">
-                    <span class="el-dropdown-link">
-                      <el-avatar shape="square" :size="50" :src="avatar" ></el-avatar>
-                    </span>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item ><i class="iconfont icon-aite"></i>{{sex === 1 ? '他' : '她'}}</el-dropdown-item>
-                        <el-dropdown-item ><i class="iconfont icon-home"></i> 查看主页</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </section>
-              </li>
-              <li class="li-item center">{{data.length}}</li> -->
             </ul>
           </div>
         </main>
@@ -254,7 +214,7 @@ import { ref, reactive, toRefs, onMounted, computed, watch, nextTick } from 'vue
 import { useRouter, useRoute } from 'vue-router'
 import { useTransition, TransitionPresets, useEventListener } from '@vueuse/core'
 import { ElMessageBox, ElMessage } from 'element-plus'
-// import { Search } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import * as Interface from '../data/home'
 export default {
   name: 'Home',
@@ -267,10 +227,17 @@ export default {
     const direction = 'ltr'
     const textarea = ref('')
     const info = ref('')
+    const audioPercent = ref(0)
     const songData = reactive({
       audioUrl: '',
-      audio: null
+      audio: null,
+      lyrics: [],
+      songName: '',
+      authorName: '',
+      authorAvatar: '',
+      img: ''
     })
+    // const songInfo = reactive({})
     const squareUrl = '../assets/logo.png'
     const lyricObj = reactive({
       lyricName: '带我去很有的地方(Live)',
@@ -304,9 +271,16 @@ export default {
         count.value = JSON.parse(res.data).data.count
       } else if (wsMessage.value.type === 'playSong') {
         console.log(wsMessage.value.data)
-        songData.audioUrl = wsMessage.value.data.playUrl;
-        songData.audio.play()
-        console.log(songData.audioUrl);
+        const { data } = JSON.parse(res.data) ?? {}
+        console.log(data);
+        songData.audioUrl = data.playUrl
+        songData.lyrics = data.lyrics ? JSON.parse(data.lyrics) : []
+        songData.songName = data.songName
+        songData.authorName = data.authorName
+        songData.authorAvatar = data.authorAvatar
+        songData.img = data.img
+        console.log(songData);
+        onplay()
       }
     }
     const token = localStorage.getItem('user_token')
@@ -346,14 +320,22 @@ export default {
         }
       )
         .then(() => {
-          songData.audio.play()
+          onplay()
         })
-        .catch(() => {
-          ElMessage({
-            type: 'info',
-            message: 'Delete canceled',
-          })
-        })
+    }
+    const onplay = _ => {
+      lyricObj.play = false
+      setTimeout(_ => {
+        songData.audio && songData.audio.play()
+      }, 1000)
+    }
+    const onPause = _ => {
+      lyricObj.play = !lyricObj.play
+      if (lyricObj.play) {
+        songData.audio.pause()
+      } else {
+        songData.audio.play()
+      }
     }
     const init = async _ => {
       const user = localStorage.getItem('user_token')
@@ -364,9 +346,18 @@ export default {
         return
       }
       Promise.all([
-        Interface.initRoomInterfacer(),
-        Interface.userInfoInterfacer()
-      ]).then(([roomData, userData]) => {
+        Interface.userInfoInterfacer(),
+        Interface.initRoomInterfacer()
+      ]).then(([userData, roomData]) => {
+        if (userData === 401) {
+          router.push({
+            name: 'Login',
+            query: {
+              type: '0'
+            }
+          })
+          return
+        }
         const ws = new WebSocket(`ws:${process.env.VUE_APP_ROBOT_HOST}/music/mws?userId=${userData.id}&roomId=${roomData.id}&token=`)
         ws.addEventListener('open', handleOpen, false)
         ws.addEventListener('close', handleClose, false)
@@ -405,17 +396,11 @@ export default {
       if (curUser.headUrl)  return `url(${curUser.headUrl})`
       return `url(${require('../assets/img/article.png')})`
     }
-    const output = useTransition(count, {
-      duration: 3000,
-      transition: TransitionPresets.easeOutExpo,
-    })
-
     const boxScroll = (o) => {
       const div = document.getElementById("divmsg");
       div.scrollTop = div.scrollHeight
     }
     const song = ref('')
-    const Search = ref('')
     const loading = ref(false)
     const disabled = computed(() => loading.value)
     const searchSong = reactive({
@@ -441,13 +426,13 @@ export default {
           roomId: roomInfo.value.id
         }
       )
-      console.log(data)
     }
     const passSongHandle = async ({fileHash, sqfileHash, thirdId}) => {
       const data = await Interface.passSongInterfacer(roomInfo.value.id)
-      console.log(data)
     }
-    // const userName = computed(_ => {})
+    const audioTimeUpdate = e => {
+      audioPercent.value = parseInt(songData.audio.currentTime / songData.audio.duration * 10000) / 100
+    }
     onMounted(init)
     return {
       bgColor,
@@ -468,13 +453,15 @@ export default {
       setPosition,
       setUrl,
       count,
-      output,
       dialogVisible,
       searchHandle,
       song,
       Search,
       addSongHandle,
       passSongHandle,
+      onPause,
+      audioTimeUpdate,
+      audioPercent,
       ...toRefs(lyricObj),
       ...toRefs(roomMsgList),
       ...toRefs(songData),
@@ -502,19 +489,45 @@ export default {
 
       .music-music
         flex 1
+        position relative
+
+        .lyric-box-bg
+          width 100%
+          height 100%
+          background-size contain
+          opacity 0.15
+          position absolute
+          top 0
+          left 0
+          z-index 1
+
+        .lyric-box
+          position absolute
+          top 0
+          left 0
+          overflow hidden
+          height 100%
+          width 100%
+
+          .lyric-ul
+            width 100%
+
+            .lyric-item
+              padding 10px 0
+              text-align center
 
       .music-opt
         width 100%
-        height 200px
+        height 150px
         border-top: 1px solid #555
 
         .progress
           position relative
           height 2px
           width 100%
+          margin-bottom 10px
 
           .progress-item
-            width 200px
             position absolute
             top 0
             left 0
@@ -524,27 +537,48 @@ export default {
             background linear-gradient(270deg,#4493d7,#fff)
 
         .lyric
-          padding 20px
+          display flex
 
-          p
-            color: #aaa
-            padding-top 8px
-
-        .control
-          .el-button-group
-            width 100%
-            display flex
-
-          .el-button
+          .col-lyric
             flex 1
+            display inline-flex
+            justify-content space-around
 
-          .iconfont
-            font-size 30px
+            .lyric-img
+              width 100px
+              height 100px
 
-          .icon-zanting, .icon-bofang
-            font-size 34px
-          .icon-suiji
-            font-size 26px
+              img
+                width 100%
+                object-fit cover
+                border-radius 50%
+
+            .lyric-info
+              display inline-flex
+              flex-direction column
+              justify-content space-around
+
+              h4
+                font-size 20px
+
+              p
+                color: #aaa
+
+          .lyric-opt
+            .el-button-group
+              width 100%
+              display flex
+
+            .el-button
+              flex 1
+
+            .iconfont
+              font-size 30px
+
+            .icon-zanting, .icon-bofang
+              font-size 34px
+            .icon-suiji
+              font-size 26px
 
       .tool
         width 100%

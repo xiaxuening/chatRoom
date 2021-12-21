@@ -67,19 +67,30 @@
 </template>
 
 <script>
-import { watch, computed, onMounted, ref, reactive} from 'vue'
+import { watch, computed, onMounted, ref, reactive, toRefs} from 'vue'
 import Particles  from '../components/particles/index'
 import * as Interface from '../data/login'
 import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 export default {
   username: 'Login',
-  setup() {
+  props: {
+    type: {
+      type: String,
+      defualt: '0'
+    }
+  },
+  setup(props) {
+    const {type} = toRefs(props)
     const router = useRouter()
-    const textType = ref(true)
+    const textType = ref(!!Number(props.type))
+    console.log(textType.value);
     const refForm = ref(null)
     const captcha = ref(null)
     let uuid = Math.floor(Math.random() * 1000) + Date.now()
+    if (!textType.value) {
+      captcha.value = `/auth/captcha?uuid=${uuid}`
+    }
     const form = reactive({
       email: '',
       captcha: '',
@@ -142,7 +153,8 @@ export default {
             uuid,
             grant_type: 'password'
           }).then((result) => {
-            if (!textType.value) {
+            if (!textType.value && result) {
+              localStorage.clear()
               localStorage.setItem('user_token', result.access_token)
               router.push({
                 name: 'Home'
@@ -177,13 +189,7 @@ export default {
       })
 
     }
-    watch(textType, (count, prevCount) => {
-      if (prevCount) {
-        captcha.value = `/auth/captcha?uuid=${uuid}`
-      }
-    })
     const resetCaptchaHandle = _ => {
-      console.log(12345);
       uuid = Math.floor(Math.random() * 1000) + Date.now()
       captcha.value = `/auth/captcha?uuid=${uuid}`
     }
@@ -199,7 +205,8 @@ export default {
       toLoginHandle,
       resetPassWordHandle,
       sendCaptchaHandle,
-      resetCaptchaHandle
+      resetCaptchaHandle,
+      ...toRefs(props)
      }
   },
   components: {

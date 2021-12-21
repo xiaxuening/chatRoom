@@ -16,10 +16,10 @@ axios.interceptors.request.use((config) => {
   return config;
   }, function (error) {
     // 对请求错误做些什么
-    // return Promise.reject(error);
-    ElMessage.error(msg ? msg : '接口异常')
-    return
-  });
+    // ElMessage.error(msg ? msg : '接口异常')
+    return Promise.reject(error)
+  }
+);
 export default function ({
   url,
   method = 'post',
@@ -50,19 +50,27 @@ export default function ({
   return axios(payload)
     .then((res) => {
       const {data, code, msg} = res.data
+      console.log(code);
       if (downFile) {
         return res.data
+      }
+      if (code === 401) {
+        return Promise.resolve(401)
       }
       // 接口返回失败消息
       if (code !== 0) {
         ElMessage.error(msg ? msg : '接口异常')
         return
       }
+      if (code === 500) {
+         ElMessage.error(msg ? msg : '接口异常')
+         return Promise.resolve(false)
+      }
       // return Promise.resolve(res.data ? res.data : data ? data : true)
       return Promise.resolve(data ? data : res.data ? res.data : true)
     })
     .catch(err => {
       console.log(err);
-      ElMessage.error(err ? err : '接口异常')
+      ElMessage.error('接口异常')
     });
 }
