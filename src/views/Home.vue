@@ -7,8 +7,17 @@
       <section class="music-music">
         <div class="lyric-box-bg" :style="{'background-image': `url(${img})`}"></div>
         <div class="lyric-box">
-          <ul class="lyric-ul">
-            <li class="lyric-item" v-for="({content, time}, index) in lyrics" :key="index">
+          <ul class="lyric-ul" :style="{transform: `translateY(${translateY}px)`}">
+            <li
+              class="lyric-item"
+              :class="currentRow === index ? 'focus-in-contract-bck' : ''"
+              v-for="({content, time}, index) in lyrics"
+              :key="index"
+              :style="{
+                'font-size': currentRow === index ? '16px' : '14px',
+                'color': currentRow === index ? '#409eff' : '#fff'
+              }"
+            >
               {{content}}
             </li>
           </ul>
@@ -227,6 +236,9 @@ export default {
     const direction = 'ltr'
     const textarea = ref('')
     const info = ref('')
+    const active = ref('')
+    const currentRow = ref(0)
+    const translateY = ref(0)
     const audioPercent = ref(0)
     const songData = reactive({
       audioUrl: '',
@@ -432,6 +444,14 @@ export default {
     }
     const audioTimeUpdate = e => {
       audioPercent.value = parseInt(songData.audio.currentTime / songData.audio.duration * 10000) / 100
+      songData.lyrics.forEach((item, index) => {
+        if (item.time <= songData.audio.currentTime) {
+          currentRow.value = index
+          if (index > 9) {
+             translateY.value = -(index - 9) * 40
+          }
+        }
+      })
     }
     onMounted(init)
     return {
@@ -462,6 +482,9 @@ export default {
       onPause,
       audioTimeUpdate,
       audioPercent,
+      active,
+      currentRow,
+      translateY,
       ...toRefs(lyricObj),
       ...toRefs(roomMsgList),
       ...toRefs(songData),
@@ -508,6 +531,7 @@ export default {
           overflow hidden
           height 100%
           width 100%
+          z-index 2
 
           .lyric-ul
             width 100%
