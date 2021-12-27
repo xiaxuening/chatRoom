@@ -28,7 +28,6 @@
           ref="audio"
           class="dn"
           :src="audioUrl"
-          @oaly="onplay"
           @timeupdate="audioTimeUpdate"
           ></audio>
         <div class="progress">
@@ -103,7 +102,7 @@
                       <i class=" iconfont icon-taiyang color3"></i>
                     </p>
                     <p class="message">{{content}}</p>
-                    <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH-mm-ss')}}</p>
+                    <p class="time">{{$dayjs(createDate).format('YYYY-MM-DD HH:mm:ss')}}</p>
                   </section>
                   <section class="avatar">
                     <el-dropdown trigger="click">
@@ -219,7 +218,7 @@
 </template>
 
 <script>
-import { ref, reactive, toRefs, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, reactive, toRefs, onMounted, computed, watch, nextTick, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTransition, TransitionPresets, useEventListener } from '@vueuse/core'
 import { ElMessageBox, ElMessage } from 'element-plus'
@@ -228,6 +227,8 @@ import * as Interface from '../data/home'
 export default {
   name: 'Home',
   setup(props) {
+    const { proxy } = getCurrentInstance()
+    console.log(proxy);
     const router = useRouter()
     const route = useRoute()
     const bgColor = ref('#000')
@@ -240,6 +241,9 @@ export default {
     const currentRow = ref(0)
     const translateY = ref(0)
     const audioPercent = ref(0)
+    const tag = ref(true)
+    const nowTimestamp = ref(0)
+    const intervalTimestamp = ref(0)
     const songData = reactive({
       audioUrl: '',
       audio: null,
@@ -283,7 +287,7 @@ export default {
         count.value = JSON.parse(res.data).data.count
       } else if (wsMessage.value.type === 'playSong') {
         console.log(wsMessage.value.data)
-        const { data } = JSON.parse(res.data) ?? {}
+        const { data, createDate } = JSON.parse(res.data) ?? {}
         console.log(data);
         songData.audioUrl = data.playUrl
         songData.lyrics = data.lyrics ? JSON.parse(data.lyrics) : []
@@ -291,8 +295,13 @@ export default {
         songData.authorName = data.authorName
         songData.authorAvatar = data.authorAvatar
         songData.img = data.img
-        console.log(songData);
-        onplay()
+        songData.since = data.since
+        songData.end = data.end
+        console.log('当前时间：', proxy.$dayjs(createDate).format('YYYY-MM-DD HH:mm:ss'));
+        console.log('歌曲播放时间：', proxy.$dayjs(songData.since).format('YYYY-MM-DD HH:mm:ss'));
+        intervalTimestamp.value = createDate - songData.since
+        console.log('当前时间-歌曲播放时间：', intervalTimestamp.value);
+        !tag.value && onplay(intervalTimestamp.value)
       }
     }
     const token = localStorage.getItem('user_token')
@@ -332,14 +341,23 @@ export default {
         }
       )
         .then(() => {
-          onplay()
+          console.log('当前时间-歌曲播放时间：', intervalTimestamp.value, '1');
+          onplay(intervalTimestamp.value)
         })
     }
-    const onplay = _ => {
+    const onplay = (interval = 0) => {
+      // intervalTimestamp
+      console.log('当前时间-歌曲播放时间：', interval, '2');
+      console.log(interval / 1000);
+      console.log('当前时间-歌曲播放时间 / 1000：', interval, '3');
       lyricObj.play = false
+      tag.value = false
       setTimeout(_ => {
         songData.audio && songData.audio.play()
-      }, 1000)
+        if (interval > 0) {
+          songData.audio.currentTime = interval / 1000
+        }
+      }, 1)
     }
     const onPause = _ => {
       lyricObj.play = !lyricObj.play
