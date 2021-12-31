@@ -84,7 +84,6 @@ export default {
     const {type} = toRefs(props)
     const router = useRouter()
     const textType = ref(!!Number(props.type))
-    console.log(textType.value);
     const refForm = ref(null)
     const captcha = ref(null)
     let uuid = Math.floor(Math.random() * 1000) + Date.now()

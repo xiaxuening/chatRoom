@@ -43,7 +43,7 @@
               <p>{{authorName}}</p>
             </div>
           </section>
-          <section class="col-lyric lyric-opt">
+          <section class="lyric-opt">
             <el-button-group>
               <el-button type="text" @click="onPause"><i :class="['iconfont', play ? 'icon-bofang': 'icon-zanting']"></i></el-button>
               <el-button type="text" @click="passSongHandle"><i class=" iconfont icon-qiege"></i></el-button>
@@ -194,15 +194,17 @@
     title="I like listening to music."
     :direction="direction"
   >
-    <el-input v-model="song" placeholder="Please input music.">
+    <el-input v-model="song" autofocus placeholder="Please input music.">
       <template #append>
         <el-button :icon="Search" @click="searchHandle"></el-button>
       </template>
     </el-input>
     <div class="infinite-list-wrapper" style="overflow: auto">
       <ul
-        v-infinite-scroll="searchHandle"
+        v-infinite-scroll="loadHandle"
         class="list"
+        id="songdom"
+        :infinite-scroll-immediate="false"
         infinite-scroll-disabled="disabled"
       >
         <li v-for="({singerName, songName, ...item}, index) in list" :key="index" class="list-item">
@@ -228,7 +230,6 @@ export default {
   name: 'Home',
   setup(props) {
     const { proxy } = getCurrentInstance()
-    console.log(proxy);
     const router = useRouter()
     const route = useRoute()
     const bgColor = ref('#000')
@@ -241,6 +242,7 @@ export default {
     const currentRow = ref(0)
     const translateY = ref(0)
     const audioPercent = ref(0)
+    const pageSize = ref(0)
     const tag = ref(true)
     const nowTimestamp = ref(0)
     const intervalTimestamp = ref(0)
@@ -320,7 +322,7 @@ export default {
             creator: userInfo.value.id
           }
         ).then(res => {
-          boxScroll()
+          boxScroll('divmsg')
         })
         return false;
       }
@@ -328,7 +330,7 @@ export default {
     const getRoomMsgListAndgetRoomUserList = async roomId => {
       roomMsgList.data = await Interface.getRoomMsgListInterfacer({roomId})
       roomUserList.value = await Interface.getRoomUserListInterfacer(roomId)
-      boxScroll()
+      boxScroll('divmsg')
       confirm()
     }
     const confirm = _ => {
@@ -427,8 +429,10 @@ export default {
       return `url(${require('../assets/img/article.png')})`
     }
     const boxScroll = (o) => {
-      const div = document.getElementById("divmsg");
+      const div = document.getElementById(o);
+      console.log(div, div.scrollHeight)
       div.scrollTop = div.scrollHeight
+      console.log(div.scrollTop)
     }
     const song = ref('')
     const loading = ref(false)
@@ -438,14 +442,36 @@ export default {
       total: 0
     })
     const searchHandle = async _ => {
+      if (!song.value) {
+        ElMessage({
+          showClose: true,
+          message: '请填写歌名或歌手名！',
+          type: 'warning',
+        })
+        return
+      }
       loading.value = true
       const data = await Interface.searchSongInterfacer(
         {
-          keyword: song.value
+          keyword: song.value,
+          page: 10
         }
       )
-      console.log(data);
       searchSong.list = data.list
+      loading.value = false
+    }
+    const loadHandle = async _ => {
+      loading.value = true
+      pageSize.value += 1
+      const data = await Interface.searchSongInterfacer(
+        {
+          keyword: song.value,
+          page: 20,
+          pageSize: pageSize.value
+        }
+      )
+      searchSong.list = [...searchSong.list, ...data.list]
+      boxScroll('songdom')
       loading.value = false
     }
     const addSongHandle = async ({fileHash, sqfileHash, thirdId}) => {
@@ -503,6 +529,7 @@ export default {
       active,
       currentRow,
       translateY,
+      loadHandle,
       ...toRefs(lyricObj),
       ...toRefs(roomMsgList),
       ...toRefs(songData),
@@ -579,16 +606,19 @@ export default {
             background linear-gradient(270deg,#4493d7,#fff)
 
         .lyric
-          display flex
+          // display flex
+          position relative
 
           .col-lyric
-            flex 1
+            // flex 1
             display inline-flex
-            justify-content space-around
+            width 100%
+            // justify-content space-around
 
             .lyric-img
               width 100px
               height 100px
+              margin 0 10px
 
               img
                 width 100%
@@ -607,6 +637,10 @@ export default {
                 color: #aaa
 
           .lyric-opt
+            width 50%
+            position absolute
+            right 0
+            top 36px
             .el-button-group
               width 100%
               display flex
@@ -804,5 +838,20 @@ export default {
       color #fff
       resize none
       outline none
+
+.el-overlay
+  .el-drawer
+    background #000
+  .el-drawer__header
+    margin-bottom 0
+  .el-drawer__body
+    overflow hidden
+    .infinite-list-wrapper
+      height calc(100% - 40px)
+      overflow hidden
+      .list
+        height 100%
+        overflow-y auto
+        padding 18px 0
 
 </style>
